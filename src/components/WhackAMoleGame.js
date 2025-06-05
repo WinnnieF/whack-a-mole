@@ -1,7 +1,9 @@
+'use client'
 // components/WhackAMoleGame.js
 import { useState, useEffect, useCallback } from 'react';
 import RulesModal from './RulesModal';
 import GameBoard from './GameBoard';
+
 
 const WhackAMoleGame = () => {
   const [score, setScore] = useState(0);
@@ -10,6 +12,13 @@ const WhackAMoleGame = () => {
   const [showRules, setShowRules] = useState(true);
   const [moles, setMoles] = useState(new Map());
   const [gamePhase, setGamePhase] = useState('超慢模式');
+
+  // 地鼠尺寸設定 - 你可以在這裡統一調整
+  const MOLE_SIZE = {
+    width: 200,   // 可以改成 64, 80, 96, 120, 128 等
+    height: 200,
+    containerClass: 'w-60 h-60' // 對應的 Tailwind 類別
+  };
 
   // 獲取地鼠停留時間
   const getMoleDuration = useCallback(() => {
@@ -56,7 +65,7 @@ const WhackAMoleGame = () => {
     if (!gameActive) return;
 
     const spawnMole = () => {
-      const availableHoles = Array.from({length: 10}, (_, i) => i)
+      const availableHoles = Array.from({length: 9}, (_, i) => i)
         .filter(i => !moles.has(i));
       
       if (availableHoles.length === 0) return;
@@ -84,21 +93,45 @@ const WhackAMoleGame = () => {
   const createMole = () => {
     const rand = Math.random();
     if (rand < 0.1) {
-      return { type: 'umbrella', display: '🐭🌂', points: 20 };
+      // 雨傘類型 - 隨機選擇 6 張雨傘圖片之一
+      const umbrellaIndex = Math.floor(Math.random() * 6) + 1;
+      return { 
+        type: 'umbrella', 
+        display: `/image/umbrella${umbrellaIndex}.png`, 
+        points: 20,
+        size: MOLE_SIZE // 添加尺寸資訊
+      };
     } else if (rand < 0.2) {
-      return { type: 'box', display: '🐭📦', points: 20 };
+      // 箱子類型 - 使用箱子圖片
+      return { 
+        type: 'box', 
+        display: `/image/box.png`, 
+        points: 20,
+        size: MOLE_SIZE // 添加尺寸資訊
+      };
     } else if (rand < 0.3) {
-      return { type: 'sleepy', display: '🐭😴', points: -10 };
+      // 睡覺類型 - 隨機選擇顏色相同的地鼠圖片
+      return { 
+        type: 'sleepy', 
+        display: `/image/sleepy.png`, 
+        points: -10,
+        size: MOLE_SIZE // 添加尺寸資訊
+      };
     } else {
-      const hatColor = Math.random() < 0.5 ? '🔴' : '🔵';
-      const foodColor = Math.random() < 0.5 ? '🔴' : '🔵';
-      const points = hatColor !== foodColor ? 10 : -5;
+      // 普通地鼠類型
+      const isSameColor = Math.random() < 0.5; // 50% 機率顏色相同或不同
+      const points = isSameColor ? -5 : 10;
+      const imageIndex = Math.floor(Math.random() * 6) + 1; // 隨機選擇 1-6 張圖片
+      
+      // 根據顏色相同或不同選擇對應的圖片
+      const imageType = isSameColor ? 'same' : 'different';
+      
       return {
         type: 'normal',
-        display: `🐭${hatColor}${foodColor}`,
+        display: `/image/mole_${imageType}_${imageIndex}.png`,
         points: points,
-        hatColor,
-        foodColor
+        isSameColor,
+        size: MOLE_SIZE // 添加尺寸資訊
       };
     }
   };
@@ -134,11 +167,11 @@ const WhackAMoleGame = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-5">
+    <div className="min-h-screen bg-gradient-to-br bg-amber-50 flex items-center justify-center p-5">
       <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-4xl w-full">
         {/* 遊戲標題 */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">🎮 打地鼠遊戲</h1>
+        <div className="text-center mb-3">
+          <h1 className="text-3xl font-bold text-gray-800 mb-0">\　打擊宿舍偷吃怪　/</h1>
         </div>
 
         {/* 規則彈窗 */}
@@ -147,11 +180,11 @@ const WhackAMoleGame = () => {
         )}
 
         {/* 遊戲資訊 */}
-        <div className="flex justify-between items-center mb-6 text-xl font-bold">
-          <div className="text-green-600">
+        <div className="flex justify-between items-center mb-3 text-xl font-bold">
+          <div className="text-red-800">
             分數: <span>{score}</span>
           </div>
-          <div className="text-red-600">
+          <div className="text-red-800">
             時間: <span>{timeLeft}</span>秒
             <span className={`ml-2 text-sm ${getPhaseColor()}`}>
               {gamePhase}
@@ -167,7 +200,7 @@ const WhackAMoleGame = () => {
           <div className="text-center">
             <button
               onClick={startGame}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-full text-xl font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-200"
+              className="bg-gradient-to-r from-blue-500 to-blue-800 text-white px-8 py-4 rounded-full text-xl font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-200"
             >
               開始遊戲
             </button>
@@ -199,6 +232,4 @@ const WhackAMoleGame = () => {
   );
 };
 
-export default function WhackAMoleGame() {
-    // 函式內容
-  }
+export default WhackAMoleGame;
