@@ -12,6 +12,9 @@ const WhackAMoleGame = () => {
   const [moles, setMoles] = useState(new Map());
   const [gamePhase, setGamePhase] = useState('超慢模式');
   const [isPlayingMusic, setIsPlayingMusic] = useState(false); // 追蹤音樂播放狀態
+  // 新增：用於記錄使用者在遊戲開始前的音樂偏好
+  const [userWantedMusicOnStart, setUserWantedMusicOnStart] = useState(false);
+
 
   const audioRef = useRef(null);
 
@@ -50,6 +53,8 @@ const WhackAMoleGame = () => {
         });
       }
       setIsPlayingMusic(prev => !prev);
+      // 當使用者手動切換音樂時，更新他們的偏好
+      setUserWantedMusicOnStart(prev => !prev);
     } else {
         console.warn("audioRef.current 尚未初始化，無法切換音樂。");
     }
@@ -101,6 +106,9 @@ const WhackAMoleGame = () => {
     setShowRules(false);
     setMoles(new Map());
 
+    // 記錄使用者在開始遊戲時的音樂偏好 (即當前 isPlayingMusic 的狀態)
+    setUserWantedMusicOnStart(isPlayingMusic);
+
     // 遊戲開始時，根據 isPlayingMusic 狀態決定是否播放音樂
     if (audioRef.current) {
         if (isPlayingMusic) { // 如果 isPlayingMusic 為 true (表示使用者希望播放)
@@ -113,7 +121,7 @@ const WhackAMoleGame = () => {
     }
   };
 
-  // 遊戲計時器 (保持不變)
+  // 遊戲計時器 
   useEffect(() => {
     let timer;
     if (gameActive && timeLeft > 0) {
@@ -125,13 +133,14 @@ const WhackAMoleGame = () => {
       // 遊戲結束時暫停音樂
       if (audioRef.current) {
         audioRef.current.pause();
-        setIsPlayingMusic(false); // 更新播放狀態
+        // 移除 setIsPlayingMusic(false)，讓其保持使用者最初的偏好
+        // setIsPlayingMusic(false); 
       }
     }
     return () => clearTimeout(timer);
   }, [gameActive, timeLeft]);
 
-  // 生成地鼠 (修復 availableHholes -> availableHoles 的錯字)
+  // 生成地鼠 (已修正 availableHholes -> availableHoles 的錯字)
   useEffect(() => {
     if (!gameActive) return;
 
@@ -147,7 +156,7 @@ const WhackAMoleGame = () => {
           break;
         }
 
-        // 這裡的錯誤：availableHholes 應該是 availableHoles
+        // 修正後的程式碼：availableHoles
         const holeIndex = availableHoles[Math.floor(Math.random() * availableHoles.length)];
         const newMole = createMole();
 
@@ -235,15 +244,17 @@ const WhackAMoleGame = () => {
     setTimeLeft(30);
     setMoles(new Map());
 
-    // 重新開始時，根據 isPlayingMusic 狀態決定是否播放音樂
+    // 重新開始時，根據 userWantedMusicOnStart 的原始偏好來決定是否播放音樂
     if (audioRef.current) {
-        if (isPlayingMusic) { // 如果 isPlayingMusic 為 true (表示使用者希望播放)
+        if (userWantedMusicOnStart) { // 如果使用者一開始就想播放音樂
             audioRef.current.currentTime = 0; // 重新開始時，音樂從頭開始播放是合理的
             audioRef.current.play().catch(error => {
                 console.error("音樂重新播放失敗，可能被瀏覽器阻止:", error);
             });
-        } else { // 如果 isPlayingMusic 為 false (表示使用者希望暫停)
+            setIsPlayingMusic(true); // 更新 isPlayingMusic 狀態
+        } else { // 如果使用者一開始就不想播放音樂
             audioRef.current.pause();
+            setIsPlayingMusic(false); // 不播放時，確保 isPlayingMusic 為 false
         }
     }
   };
