@@ -9,7 +9,7 @@ const RulesModal = ({ onClose, onStartGame, toggleMusic, isPlayingMusic }) => {
   const rulesContent = [
     // Page 1: 遊戲時間與節奏
     <div>
-      <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">⏰ 遊戲時間與節奏</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-2 ">⏰ 遊戲時間與節奏</h3>
       <ul className="space-y-1 ml-4">
         <li>• 遊戲總時間：30秒</li>
         <li>• 前10秒：<strong className="text-green-600">超慢模式</strong> - 幾隻地鼠出現讓你熟悉操作</li>
